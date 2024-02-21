@@ -1,6 +1,5 @@
 const { Buffer } = require('buffer')
-const { readFile } = require('fs')
-const fs = require('fs/promises')
+const fs = require('node:fs/promises')
 
 ;(async () => {
    // load a file to the process
