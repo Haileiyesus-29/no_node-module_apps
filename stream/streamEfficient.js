@@ -1,7 +1,7 @@
 const fs = require('node:fs/promises')
 const { Buffer } = require('node:buffer')
 
-const WRITE_NUMBER = 1000000
+const WRITE_NUMBER = 50000000
 
 ;(async () => {
    const file = await fs.open('temp-gigantic.txt', 'w')
