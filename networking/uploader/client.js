@@ -2,13 +2,12 @@ const net = require('node:net')
 const fs = require('node:fs/promises')
 const path = require('node:path')
 
+console.log()
 const client = net.createConnection({ port: 1122, host: '::1' }, async () => {
    const fileName = process.argv[2]
-   console.log(fileName)
    if (!fileName) return console.log('file name required.')
 
    let file = null
-
    try {
       file = await fs.open(fileName, 'r')
    } catch (error) {
@@ -19,14 +18,16 @@ const client = net.createConnection({ port: 1122, host: '::1' }, async () => {
    const readStream = file.createReadStream()
    const fileSize = (await file.stat()).size
    let uploaded = 0
-   let scale = 0.1
-
-   console.log()
+   let scale = 0.01
 
    client.write(Buffer.from(`${path.basename(fileName)}||`))
+
    readStream.on('data', chunk => {
-      client.write(chunk)
-      uploaded += chunk.length
+      if (client.write(chunk)) {
+         uploaded += chunk.length
+      } else {
+         readStream.pause()
+      }
 
       if (uploaded / fileSize >= scale) {
          process.stdout.moveCursor(0, -1, () => {
@@ -40,6 +41,10 @@ const client = net.createConnection({ port: 1122, host: '::1' }, async () => {
       }
    })
 
+   client.on('drain', () => {
+      readStream.resume()
+   })
+
    readStream.on('end', () => {
       file.close()
       client.end()
@@ -50,8 +55,6 @@ const client = net.createConnection({ port: 1122, host: '::1' }, async () => {
    })
 })
 
-let count = 0
 client.on('data', data => {
-   console.log(++count)
    console.log(data.toString())
 })

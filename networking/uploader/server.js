@@ -8,6 +8,9 @@ server.on('connection', async socket => {
    let writeStream = null
    console.log('client connected')
 
+   let drained = 0
+
+   console.time('time')
    socket.on('data', async chunk => {
       if (!dest) {
          socket.pause()
@@ -18,6 +21,7 @@ server.on('connection', async socket => {
          socket.resume()
          writeStream.write(chunk.subarray(indexOfData + 2))
          writeStream.on('drain', () => {
+            ++drained
             socket.resume()
          })
       } else {
@@ -31,8 +35,9 @@ server.on('connection', async socket => {
       console.log('connection closed!')
       dest?.close()
       writeStream?.end()
-
+      console.log(`drained ${drained} times`)
       dest = null
+      console.timeEnd('time')
       writeStream = null
    })
 })
